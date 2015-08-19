@@ -241,7 +241,7 @@ print "Compilation start ..."
 start_time = time.time()
 loss2, grads2 = grad_supervised(l_ram, labels)
 fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels], 
-                 outputs=[loss2, grads2[0], grads2[-1]],
+                 outputs=[loss2]+grads2,
                  updates=l_ram.updates, 
 )
 end_time = time.time()
@@ -252,7 +252,7 @@ print "Compilation start ..."
 start_time = time.time()
 loss1, grads1 = grad_reinforcement(l_ram, labels)
 fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels], 
-                 outputs=[loss1, grads1[0], grads1[-1]],
+                 outputs=[loss1]+grads1,
                  updates=l_ram.updates, 
 )
 end_time = time.time()
