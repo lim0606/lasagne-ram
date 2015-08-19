@@ -4,3 +4,98 @@
   warnings.warn("get_all_layers() has been changed to return layers in "
 /home/jaehyun/github/Theano/theano/scan_module/scan_perform_ext.py:135: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility
   from scan_perform.scan_perform import *
+test!!!!!
+
+1: 
+Compilation start ...
+Compilation end (1.355 sec)
+
+2: 
+Compilation start ...
+Compilation end (1.151 sec)
+
+3: 
+Compilation start ...
+Compilation end (18.956 sec)
+
+4: 
+Compilation start ...
+Compilation end (484.626 sec)
+
+5: 
+Compilation start ...
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mMissingInputError[0m                         Traceback (most recent call last)
+[0;32m/usr/lib/python2.7/dist-packages/IPython/utils/py3compat.pyc[0m in [0;36mexecfile[0;34m(fname, *where)[0m
+[1;32m    202[0m             [0;32melse[0m[0;34m:[0m[0;34m[0m[0m
+[1;32m    203[0m                 [0mfilename[0m [0;34m=[0m [0mfname[0m[0;34m[0m[0m
+[0;32m--> 204[0;31m             [0m__builtin__[0m[0;34m.[0m[0mexecfile[0m[0;34m([0m[0mfilename[0m[0;34m,[0m [0;34m*[0m[0mwhere[0m[0;34m)[0m[0;34m[0m[0m
+[0m
+[0;32m/home/jaehyun/github/lasagne-ram/example.py[0m in [0;36m<module>[0;34m()[0m
+[1;32m    274[0m fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels],
+[1;32m    275[0m                 [0moutputs[0m[0;34m=[0m[0moutputs[0m[0;34m,[0m[0;34m[0m[0m
+[0;32m--> 276[0;31m                 updates=l_ram.updates)
+[0m[1;32m    277[0m [0mend_time[0m [0;34m=[0m [0mtime[0m[0;34m.[0m[0mtime[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0m
+[1;32m    278[0m [0;32mprint[0m [0;34m'Compilation end (%.3f sec)'[0m [0;34m%[0m [0;34m([0m[0mend_time[0m [0;34m-[0m [0mstart_time[0m[0;34m)[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/compile/function.pyc[0m in [0;36mfunction[0;34m(inputs, outputs, mode, updates, givens, no_default_updates, accept_inplace, name, rebuild_strict, allow_input_downcast, profile, on_unused_input)[0m
+[1;32m    308[0m                    [0mon_unused_input[0m[0;34m=[0m[0mon_unused_input[0m[0;34m,[0m[0;34m[0m[0m
+[1;32m    309[0m                    [0mprofile[0m[0;34m=[0m[0mprofile[0m[0;34m,[0m[0;34m[0m[0m
+[0;32m--> 310[0;31m                    output_keys=output_keys)
+[0m[1;32m    311[0m     [0;31m# We need to add the flag check_aliased inputs if we have any mutable or[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    312[0m     [0;31m# borrowed used defined inputs[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/compile/pfunc.pyc[0m in [0;36mpfunc[0;34m(params, outputs, mode, updates, givens, no_default_updates, accept_inplace, name, rebuild_strict, allow_input_downcast, profile, on_unused_input, output_keys)[0m
+[1;32m    521[0m                          [0maccept_inplace[0m[0;34m=[0m[0maccept_inplace[0m[0;34m,[0m [0mname[0m[0;34m=[0m[0mname[0m[0;34m,[0m[0;34m[0m[0m
+[1;32m    522[0m                          [0mprofile[0m[0;34m=[0m[0mprofile[0m[0;34m,[0m [0mon_unused_input[0m[0;34m=[0m[0mon_unused_input[0m[0;34m,[0m[0;34m[0m[0m
+[0;32m--> 523[0;31m                          output_keys=output_keys)
+[0m[1;32m    524[0m [0;34m[0m[0m
+[1;32m    525[0m [0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/compile/function_module.pyc[0m in [0;36morig_function[0;34m(inputs, outputs, mode, accept_inplace, name, profile, on_unused_input, output_keys)[0m
+[1;32m   1523[0m                    [0mprofile[0m[0;34m=[0m[0mprofile[0m[0;34m,[0m[0;34m[0m[0m
+[1;32m   1524[0m                    [0mon_unused_input[0m[0;34m=[0m[0mon_unused_input[0m[0;34m,[0m[0;34m[0m[0m
+[0;32m-> 1525[0;31m                    [0moutput_keys[0m[0;34m=[0m[0moutput_keys[0m[0;34m)[0m[0;34m.[0m[0mcreate[0m[0;34m([0m[0;34m[0m[0m
+[0m[1;32m   1526[0m             defaults)
+[1;32m   1527[0m [0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/compile/function_module.pyc[0m in [0;36m__init__[0;34m(self, inputs, outputs, mode, accept_inplace, function_builder, profile, on_unused_input, fgraph, output_keys)[0m
+[1;32m   1182[0m             [0;31m# OUTPUT VARIABLES)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m   1183[0m             fgraph, additional_outputs = std_fgraph(inputs, outputs,
+[0;32m-> 1184[0;31m                                                     accept_inplace)
+[0m[1;32m   1185[0m             [0mfgraph[0m[0;34m.[0m[0mprofile[0m [0;34m=[0m [0mprofile[0m[0;34m[0m[0m
+[1;32m   1186[0m         [0;32melse[0m[0;34m:[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/compile/function_module.pyc[0m in [0;36mstd_fgraph[0;34m(input_specs, output_specs, accept_inplace)[0m
+[1;32m    145[0m     [0morig_outputs[0m [0;34m=[0m [0;34m[[0m[0mspec[0m[0;34m.[0m[0mvariable[0m [0;32mfor[0m [0mspec[0m [0;32min[0m [0moutput_specs[0m[0;34m][0m [0;34m+[0m [0mupdates[0m[0;34m[0m[0m
+[1;32m    146[0m [0;34m[0m[0m
+[0;32m--> 147[0;31m     [0mfgraph[0m [0;34m=[0m [0mgof[0m[0;34m.[0m[0mfg[0m[0;34m.[0m[0mFunctionGraph[0m[0;34m([0m[0morig_inputs[0m[0;34m,[0m [0morig_outputs[0m[0;34m)[0m[0;34m[0m[0m
+[0m[1;32m    148[0m [0;34m[0m[0m
+[1;32m    149[0m     [0;32mfor[0m [0mnode[0m [0;32min[0m [0mfgraph[0m[0;34m.[0m[0mapply_nodes[0m[0;34m:[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/gof/fg.pyc[0m in [0;36m__init__[0;34m(self, inputs, outputs, features, clone)[0m
+[1;32m    136[0m [0;34m[0m[0m
+[1;32m    137[0m         [0;32mfor[0m [0moutput[0m [0;32min[0m [0moutputs[0m[0;34m:[0m[0;34m[0m[0m
+[0;32m--> 138[0;31m             [0mself[0m[0;34m.[0m[0m__import_r__[0m[0;34m([0m[0moutput[0m[0;34m,[0m [0mreason[0m[0;34m=[0m[0;34m"init"[0m[0;34m)[0m[0;34m[0m[0m
+[0m[1;32m    139[0m         [0;32mfor[0m [0mi[0m[0;34m,[0m [0moutput[0m [0;32min[0m [0menumerate[0m[0;34m([0m[0moutputs[0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0m
+[1;32m    140[0m             [0moutput[0m[0;34m.[0m[0mclients[0m[0;34m.[0m[0mappend[0m[0;34m([0m[0;34m([0m[0;34m'output'[0m[0;34m,[0m [0mi[0m[0;34m)[0m[0;34m)[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/gof/fg.pyc[0m in [0;36m__import_r__[0;34m(self, variable, reason)[0m
+[1;32m    253[0m         [0;31m# Imports the owners of the variables[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    254[0m         [0;32mif[0m [0mvariable[0m[0;34m.[0m[0mowner[0m [0;32mand[0m [0mvariable[0m[0;34m.[0m[0mowner[0m [0;32mnot[0m [0;32min[0m [0mself[0m[0;34m.[0m[0mapply_nodes[0m[0;34m:[0m[0;34m[0m[0m
+[0;32m--> 255[0;31m                 [0mself[0m[0;34m.[0m[0m__import__[0m[0;34m([0m[0mvariable[0m[0;34m.[0m[0mowner[0m[0;34m,[0m [0mreason[0m[0;34m=[0m[0mreason[0m[0;34m)[0m[0;34m[0m[0m
+[0m[1;32m    256[0m         if (variable.owner is None and
+[1;32m    257[0m                 [0;32mnot[0m [0misinstance[0m[0;34m([0m[0mvariable[0m[0;34m,[0m [0mgraph[0m[0;34m.[0m[0mConstant[0m[0;34m)[0m [0;32mand[0m[0;34m[0m[0m
+
+[0;32m/home/jaehyun/github/Theano/theano/gof/fg.pyc[0m in [0;36m__import__[0;34m(self, apply_node, check, reason)[0m
+[1;32m    348[0m                                 [0;34m'leading from this input to an output is %s. '[0m[0;34m[0m[0m
+[1;32m    349[0m                                 [0;34m'This chain may not be unique'[0m [0;34m%[0m [0mstr[0m[0;34m([0m[0mpath[0m[0;34m)[0m [0;34m+[0m[0;34m[0m[0m
+[0;32m--> 350[0;31m                                 detailed_err_msg)
+[0m[1;32m    351[0m [0;34m[0m[0m
+[1;32m    352[0m                         [0;31m# Standard error message[0m[0;34m[0m[0;34m[0m[0m
+
+[0;31mMissingInputError[0m: A variable that is an input to the graph was neither provided as an input to the function nor given a value. A chain of variables leading from this input to an output is [input[t-1], Subtensor{int64}.0, Subtensor{int64}.0, Elemwise{add,no_inplace}.0, Elemwise{mul,no_inplace}.0, Elemwise{true_div,no_inplace}.0, Elemwise{sub,no_inplace}.0, Elemwise{Cast{int32}}.0, DimShuffle{x}.0, Elemwise{add,no_inplace}.0, AdvancedSubtensor1.0, DimShuffle{1,0,2}.0, DimShuffle{2,1,0}.0, AdvancedSubtensor1.0, DimShuffle{2,1,0}.0, DimShuffle{x,0,1,2}.0, Join.0, DimShuffle{x,0,1,2,3}.0, Join.0, Reshape{2}.0, dot.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{mul,no_inplace}.0, dot.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{mul,no_inplace}.0, dot.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{add,no_inplace}.0, Elemwise{mul,no_inplace}.0, dot.0, Elemwise{add,no_inplace}.0, Shape.0, Prod{acc_dtype=int64}.0, Elemwise{add,no_inplace}.0, MakeVector.0, Elemwise{Cast{int32}}.0, mrg_uniform{TensorType(float32, vector),no_inplace}.0]. This chain may not be unique
+Backtrace when the variable is created:
+  File "ram/layers/ram.py", line 348, in get_output_for
+    n_steps=self.n_steps)
+
