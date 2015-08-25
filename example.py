@@ -193,12 +193,10 @@ img_width = X_train.shape[3]
 #print X_train.shape
 
 n_batch = 2
-l_loc_0 = lasagne.layers.InputLayer(shape=(n_batch, 2))
 l_in = lasagne.layers.InputLayer(shape=(n_batch, n_channels, img_height, img_width))
 labels = T.ivector('label')
 
 l_ram=ram.layers.RAMLayer(l_in, # input images (n_batch x n_channels x img_height x img_width)
-                          l_loc_0,
                           k=1, # number of glimps steps
                           patch=8, # size of glimps patch
                           n_steps=4, # number of glimps steps
@@ -213,67 +211,56 @@ l_ram=ram.layers.RAMLayer(l_in, # input images (n_batch x n_channels x img_heigh
 )
 
 print "test!!!!!"
-print ""; print "1: "
-print "Compilation start ..."
-start_time = time.time()
-loc_mean_t, loc_t, h_t, prob, pred = lasagne.layers.get_output(l_ram)
-fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var], 
-                 outputs=[loc_mean_t, loc_t, h_t, prob, pred], 
-                 updates=l_ram.updates, 
-)
-end_time = time.time()
-print 'Compilation end (%.3f sec)' % (end_time - start_time)
-
-print ""; print "2: "
-print "Compilation start ..."
-start_time = time.time()
-loss2 = categorical_crossentropy(prob, labels)
-loss2 = aggregate(loss2, mode='mean')
-fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels], 
-                 outputs=loss2,
-                 updates=l_ram.updates, 
-)
-end_time = time.time()
-print 'Compilation end (%.3f sec)' % (end_time - start_time)
-
-print ""; print "3: "
-print "Compilation start ..."
-start_time = time.time()
-loss2, grads2 = grad_supervised(l_ram, labels)
-fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels], 
-                 outputs=[loss2]+grads2,
-                 updates=l_ram.updates, 
-)
-end_time = time.time()
-print 'Compilation end (%.3f sec)' % (end_time - start_time)
-
-print ""; print "4: "
-print "Compilation start ..."
-start_time = time.time()
-loss1, grads1 = grad_reinforcement(l_ram, labels)
-fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels], 
-                 outputs=[loss1]+grads1,
-                 updates=l_ram.updates, 
-)
-end_time = time.time()
-print 'Compilation end (%.3f sec)' % (end_time - start_time)
+#print ""; print "1: "
+#print "Compilation start ..."
+#start_time = time.time()
+#loc_mean_t, loc_t, h_t, prob, pred = lasagne.layers.get_output(l_ram)
+#fn = theano.function(inputs=[l_in.input_var], 
+#                 outputs=[loc_mean_t, loc_t, h_t, prob, pred], 
+#)
+#end_time = time.time()
+#print 'Compilation end (%.3f sec)' % (end_time - start_time)
+#
+#print ""; print "2: "
+#print "Compilation start ..."
+#start_time = time.time()
+#loss2 = categorical_crossentropy(prob, labels)
+#loss2 = aggregate(loss2, mode='mean')
+#fn = theano.function(inputs=[l_in.input_var, labels], 
+#                 outputs=loss2,
+#)
+#end_time = time.time()
+#print 'Compilation end (%.3f sec)' % (end_time - start_time)
+#
+#print ""; print "3: "
+#print "Compilation start ..."
+#start_time = time.time()
+#loss2, grads2 = grad_supervised(l_ram, labels)
+#fn = theano.function(inputs=[l_in.input_var, labels], 
+#                 outputs=[loss2]+grads2,
+#)
+#end_time = time.time()
+#print 'Compilation end (%.3f sec)' % (end_time - start_time)
+#
+#print ""; print "4: "
+#print "Compilation start ..."
+#start_time = time.time()
+#loss1, grads1 = grad_reinforcement(l_ram, labels)
+#fn = theano.function(inputs=[l_in.input_var, labels], 
+#                 outputs=[loss1]+grads1,
+#)
+#end_time = time.time()
+#print 'Compilation end (%.3f sec)' % (end_time - start_time)
 
 
 # main
 print ""; print "5: "
 print 'Compilation start ...'
 start_time = time.time()
-
 loss, grads = grad(l_ram, labels)
-
-outputs = []
-outputs.append(loss)
-for grad in grads:
-    outputs.append(grad)
-
-fn = theano.function(inputs=[l_in.input_var, l_loc_0.input_var, labels],
-                outputs=outputs, 
-                updates=l_ram.updates)
+fn = theano.function(inputs=[l_in.input_var, labels],
+                outputs=[loss]+grads, 
+)
 end_time = time.time()
 print 'Compilation end (%.3f sec)' % (end_time - start_time)
 

@@ -53,17 +53,16 @@ import numpy as np
 import lasagne
 from lasagne import init # from .. import init
 from lasagne import nonlinearities # from .. import nonlinearities
-#from lasagne.layers.base import Layer # from .base import Layer
-from lasagne.layers.merge import MergeLayer 
+from lasagne.layers.base import Layer # from .base import Layer
+#from lasagne.layers.merge import MergeLayer 
 
 __all__ = [
     "RAMLayer",
 ]
 
-class RAMLayer(MergeLayer):
+class RAMLayer(Layer):
     def __init__(self, 
                  input, # input images (n_batch x n_channels x img_height x img_width)
-                 loc_0, # location init
                  #n_batch=64, # number of batch
                  k=1, # number of glimps steps
                  patch=8, # size of glimps patch
@@ -77,18 +76,18 @@ class RAMLayer(MergeLayer):
                  n_classes=10, # number of classes in classification problem
                  learn_init=True, 
                  **kwargs):
-        super(RAMLayer, self).__init__([input, loc_0], **kwargs)
+        super(RAMLayer, self).__init__(input, **kwargs)
 
-        if len(self.input_shapes[0]) is 3:
-            self.n_batch=self.input_shapes[0][0]
+        if len(self.input_shape) is 3:
+            self.n_batch=self.input_shape[0]
             self.n_channels=1
-            self.img_height=self.input_shapes[0][1]
-            self.img_width=self.input_shapes[0][2]
-        elif len(self.input_shapes[0]) is 4:
-            self.n_batch=self.input_shapes[0][0]
-            self.n_channels=self.input_shapes[0][1]
-            self.img_height=self.input_shapes[0][2]
-            self.img_width=self.input_shapes[0][3]
+            self.img_height=self.input_shape[1]
+            self.img_width=self.input_shape[2]
+        elif len(self.input_shape) is 4:
+            self.n_batch=self.input_shape[0]
+            self.n_channels=self.input_shape[1]
+            self.img_height=self.input_shape[2]
+            self.img_width=self.input_shape[3]
         else: 
             raise ValueError("Input should be either gray scale (ndim = 3) or color (ndim = 4) images."
                              "Current ndim=%d" % self.ndim)
@@ -138,10 +137,10 @@ class RAMLayer(MergeLayer):
                 init.Constant(0.), (1,) + (self.n_f_h,), name="hid_init",
                 trainable=learn_init, regularizable=False)
 
-    def get_output_shape_for(self, input_shapes):
-        return input_shapes[0][0], self.n_steps, self.n_f_h
+    def get_output_shape_for(self, input_shape):
+        return input_shape[0], self.n_steps, self.n_f_h
 
-    def get_output_for(self, inputs, mask=None, **kwargs):
+    def get_output_for(self, input, mask=None, **kwargs):
         def rho(loc_tm1, x):#, height, width, patch=8, k=1):
             """
             return: 
@@ -250,7 +249,7 @@ class RAMLayer(MergeLayer):
         
             inputs: 
               h_tm1 = hidden states estimated at t-1
-                    (n_batch x num hiddens of h_t) 
+                    = (n_batch x num hiddens of h_t) 
                   [theano tensor variable] and recurrent 
               g_t = glimps output
                   = (n_batch x num hiddens of g_t) 
@@ -289,10 +288,35 @@ class RAMLayer(MergeLayer):
             return loc_mean_t
         
         #def step(sequences, outputs, non_sequences, *varargin):
-        def step(loc_tm1, h_tm1, x):#, height, width, patch=8, k=1): 
+        def step(noise, loc_tm1, h_tm1, x):#, height, width, patch=8, k=1): 
             """
-            return: 
+            return:
+              l_mean_t = (mean) location estimated at t
+                       = l(t-1) = y(t-1), x(t-1)
+                       = (n_batch x 2)
+                  [theano tensor variable]
+              loc_t = location estimated at t
+                    = l(t-1) = y(t-1), x(t-1)
+                    = (n_batch x 2)
+                  [theano tensor variable]
+              h_t = hidden states (output of core network)
+                  = (n_batch x num hiddens of h_t)
+                  [theano tensor variable] and recurrent
+ 
             inputs: 
+              noise = (n_batch x 2) generated via normal(0, self.sigma^2)
+                  [theano tensor variable] and [sequence]
+              h_tm1 = hidden states estimated at t-1
+                    = (n_batch x num hiddens of h_t)
+	          [theano tensor variable] and [output]
+              loc_tm1 = location estimated at t-1
+                      = l(t-1) = y(t-1), x(t-1)
+                      = (n_batch x 2)
+                  [theano tensor variable] and [outputs]
+              x = original image
+                = (n_batch x channels x height x width)
+                  [theano tensor variable] and [non_sequencs]
+
             parameters: 
               self.sigma = (2 x 2) whose diagonal is initialized with pre-defined standard deviations
             """
@@ -307,9 +331,10 @@ class RAMLayer(MergeLayer):
             #print 'loc_mean_t.ndim: ', loc_mean_t.ndim  
         
             #loc_t ~ gaussian(loc_mean_t, [[sigma^2, 0], [0, sigma^2]]^-1)
-            loc_t = loc_mean_t + self._srng.normal(loc_mean_t.shape,
-                                                 avg=0.0,
-                                                 std=self.sigma)
+            #loc_t = loc_mean_t + self._srng.normal(loc_mean_t.shape,
+            #                                     avg=0.0,
+            #                                     std=self.sigma)
+            loc_t = loc_mean_t + noise
             return loc_mean_t, loc_t, h_t
         
         def classifier(h_T): 
@@ -339,12 +364,13 @@ class RAMLayer(MergeLayer):
         # scan
         [loc_mean_t, loc_t, h_t], updates = theano.scan(step, 
                                   outputs_info=[None, # initial input of loc_mean_t does not affect the result
-                                                #T.zeros((self.n_batch, 2)) + self._srng.uniform((self.n_batch, 2)) * (1. - -1.) + -1.,
-                                                inputs[1], # l_loc_0
+                                                self._srng.uniform((self.n_batch, 2)) * (1. - -1.) + -1., # initialize location
                                                 hid_init,
                                                 ],
-                                  #non_sequences=[input, self.img_height, self.img_width, self.patch, self.k], 
-                                  non_sequences=[inputs[0]], 
+                                  sequences=[self._srng.normal((self.n_steps, self.n_batch, 2),
+                                                               avg=0.0,
+                                                               std=self.sigma)],
+                                  non_sequences=[input], 
                                   n_steps=self.n_steps)
         self.updates = updates
 
