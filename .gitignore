@@ -51,3 +51,4 @@
 /etc
 etc/*
 *.pkl.gz
+*.log
