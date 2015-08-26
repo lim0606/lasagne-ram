@@ -93,7 +93,7 @@ def grad_reinforcement(l_ram, labels):
     r = theano.tensor.eq(pred, labels) # -> (n_batch,)
 
     ### for baseline estimation
-    log_pi_t = - (loc_t - loc_mean_t)**2 / (2 * l_ram.sigma**2)
+    log_pi_t = - (loc_t - loc_mean_t)**2 / (2 * np.pi * l_ram.sigma**2)
     log_pi_t = log_pi_t.mean(axis=2) # -> (n_batch x n_steps)
 
     ### jacobian of log_pi_t wrt param
@@ -184,7 +184,10 @@ def grad(l_ram, labels):
 
     return loss, grads
 
-### init
+
+
+
+# Step1a: load data
 X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 n_data = X_train.shape[0]
 n_channels = X_train.shape[1]
@@ -192,14 +195,28 @@ img_height = X_train.shape[2]
 img_width = X_train.shape[3]
 #print X_train.shape
 
-n_batch = 2
+# Step1b: init variables
+n_batch = 32
+num_epochs = 100
+
+# Step1c: init batch iterators
+from utils import batchiterator
+batchitertrain = batchiterator.BatchIterator(batch_indices=range(X_train.shape[0]), batchsize=n_batch, data=(X_train, y_train))
+num_data = batchitertrain.n
+batchitertrain = batchiterator.threaded_generator(batchitertrain,10)
+
+batchiterval = batchiterator.BatchIterator(batch_indices=range(X_val.shape[0]), batchsize=n_batch, data=(X_val, y_val))
+batchiterval = batchiterator.threaded_generator(batchiterval,10)
+
+
+# Step2: define model
 l_in = lasagne.layers.InputLayer(shape=(n_batch, n_channels, img_height, img_width))
 labels = T.ivector('label')
 
 l_ram=ram.layers.RAMLayer(l_in, # input images (n_batch x n_channels x img_height x img_width)
-                          k=1, # number of glimps steps
+                          k=1, # number of glimps scales
                           patch=8, # size of glimps patch
-                          n_steps=4, # number of glimps steps
+                          n_steps=6, # number of glimps steps
                           lambda_=10.0, # mixing ratio between
                           n_h_g=128, # number of hidden units in h_g (in glimps network)
                           n_h_l=128, # number of hidden units in h_l (in glimps network)
@@ -210,7 +227,7 @@ l_ram=ram.layers.RAMLayer(l_in, # input images (n_batch x n_channels x img_heigh
                           learn_init=True,
 )
 
-print "test!!!!!"
+#print "test!!!!!"
 #print ""; print "1: "
 #print "Compilation start ..."
 #start_time = time.time()
@@ -251,16 +268,131 @@ print "test!!!!!"
 #)
 #end_time = time.time()
 #print 'Compilation end (%.3f sec)' % (end_time - start_time)
+#
+## main
+#print ""; print "5: "
+#print 'Compilation start ...'
+#start_time = time.time()
+#loss, grads = grad(l_ram, labels)
+#fn = theano.function(inputs=[l_in.input_var, labels],
+#                outputs=[loss]+grads, 
+#)
+#end_time = time.time()
+#print 'Compilation end (%.3f sec)' % (end_time - start_time)
 
 
-# main
-print ""; print "5: "
-print 'Compilation start ...'
+
+
+
+# Obatain params
+all_params = lasagne.layers.get_all_params(l_ram, trainable=True)
+
+# Compute loss and gradient
+print "Compute loss and gradient ..."
 start_time = time.time()
-loss, grads = grad(l_ram, labels)
-fn = theano.function(inputs=[l_in.input_var, labels],
-                outputs=[loss]+grads, 
+loss, all_grads = grad(l_ram, labels)
+end_time = time.time()
+print "Done (%.3f sec)" % (end_time-start_time)
+
+# Compute updates
+print "Compute updates ..."
+updates = lasagne.updates.adam(
+        loss_or_grads=all_grads,
+        params=all_params,
+        learning_rate=0.001,
+)
+
+# Compiling function
+print "Compiling funtions ..."
+start_time = time.time()
+train_fn = theano.function(inputs=[l_in.input_var, labels],
+                           outputs=[loss],
+                           updates=updates,
+)
+
+valid_fn = theano.function(inputs=[l_in.input_var, labels],
+                           outputs=[loss]+all_grads,
 )
 end_time = time.time()
-print 'Compilation end (%.3f sec)' % (end_time - start_time)
+print "Done (%.3f sec)" % (end_time-start_time)
 
+
+# ################################# training #################################
+
+print "Starting training..."
+
+import datetime
+now = datetime.datetime.now()
+output_filename = "output_%04d%02d%02d_%02d%02d%02d_%03d.log" % (now.year, now.month, now.day, now.hour, now.minute, now.second, now.microsecond)
+with open(output_filename, "w") as f:
+    f.write("Experiment Log: Recurrent Model of Attention\n")
+
+for epoch_num in range(num_epochs):
+
+    # iterate over training minibatches and update the weights
+    num_batches_train = int(np.ceil(num_data / n_batch))
+    train_losses = []
+
+    for batch_num in range(num_batches_train):
+        iter_num = epoch_num * num_batches_train + batch_num + 1
+
+        #start_time = time.time()
+        '''batch_slice = slice(n_batch * batch_num,
+                            n_batch * (batch_num + 1))
+        X_batch = X_train[batch_slice]
+        y_batch = y_train[batch_slice]'''
+        [X_batch, y_batch] = batchitertrain.next()
+
+        loss, = train_fn(X_batch, y_batch)
+
+        train_losses.append(loss)
+
+        if iter_num is 1:
+            start_time = time.time()
+
+        if iter_num % 40 is 0:
+            end_time = time.time()
+            out_str = "Iter: %d, train_loss=%f    (%.3f sec)" % (iter_num, loss, end_time-start_time)
+            print(out_str)
+            start_time = time.time()
+
+        if iter_num % 40000 == 0:
+            # save
+            weights_save = lasagne.layers.get_all_param_values([l_loss1_classifier, l_loss2_classifier, l_loss3_classifier])
+            pickle.dump( weights_save, open( "googlenet_bn_iter_%d.weight.pkl" % (iter_num), "wb" ) )
+            # load
+            #weights_load = pickle.load( open( "weights.pkl", "rb" ) )
+            #lasagne.layers.set_all_param_values(output_layer, weights_load)
+
+    # aggregate training losses for each minibatch into scalar
+    train_loss = np.mean(train_losses)
+
+    # calculate validation loss
+    num_batches_valid = int(np.ceil(len(X_valid) / n_batch))
+    valid_losses = []
+    list_of_probabilities_batch = []
+    for batch_num in range(num_batches_valid):
+        '''batch_slice = slice(n_batch * batch_num,
+                            n_batch * (batch_num + 1))
+        X_batch = X_valid[batch_slice]
+        y_batch = y_valid[batch_slice]'''
+        [X_batch, y_batch] = batchiterval.next()
+
+        loss, grads = valid_fn(X_batch, y_batch)
+
+        valid_losses.append(loss)
+        list_of_probabilities_batch.append(loss3_probs)
+
+    valid_loss = np.mean(valid_losses)
+    # concatenate probabilities for each batch into a matrix
+    probabilities = np.concatenate(list_of_probabilities_batch)
+    # calculate classes from the probabilities
+    predicted_classes = np.argmax(probabilities, axis=1)
+    # calculate accuracy for this epoch
+    #accuracy = sklearn.metrics.accuracy_score(y_valid, predicted_classes)
+
+    out_str = "Epoch: %d, train_loss=%f, valid_loss=%f" % (epoch_num + 1, train_loss, valid_loss)
+    print(out_str)
+
+    with open(output_filename, "a") as f:
+            f.write(out_str + "\n")

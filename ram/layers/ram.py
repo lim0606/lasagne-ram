@@ -64,9 +64,9 @@ class RAMLayer(Layer):
     def __init__(self, 
                  input, # input images (n_batch x n_channels x img_height x img_width)
                  #n_batch=64, # number of batch
-                 k=1, # number of glimps steps
+                 k=1, # number of glimps scales
                  patch=8, # size of glimps patch
-                 n_steps=4, # number of glimps steps
+                 n_steps=6, # number of glimps steps
                  lambda_=10.0, # mixing ratio between
                  n_h_g=128, # number of hidden units in h_g (in glimps network)
                  n_h_l=128, # number of hidden units in h_l (in glimps network)
